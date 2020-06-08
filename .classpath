@@ -4,5 +4,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="C:/lucene-8.5.2/lucene-8.5.2/core/lucene-core-8.5.2.jar"/>
 	<classpathentry kind="lib" path="C:/lucene-8.5.2/json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="C:/lucene-8.5.2/lucene-queryparser-8.5.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

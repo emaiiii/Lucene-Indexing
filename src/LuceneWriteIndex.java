@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -18,10 +19,20 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.packed.PackedLongValues.Iterator;
+
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.TopDocs;
+
 import org.json.simple.JSONArray; 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -31,19 +42,109 @@ import org.json.*;
 public class LuceneWriteIndex {
 
 	// directory to files
+	// INDEX_DIR target directory for index files to be created
+	// JSON_FILE_PATH directory for JSON files to be indexed
 	private static final String INDEX_DIR = "C:\\lucene\\indexes";
 	private static final String JSON_FILE_PATH = "\\convertedtweets";
 	
 	 
     public static void main(String[] args) throws Exception 
     {
-    	JSONArray arrayObject = new JSONArray();
+    	// create the indexes
+    	//createIndexes();
+    	
+    	// testing for searches
+    	testSearches();
+    }
+    
+    public static void testSearches() throws Exception{
+    	IndexSearcher searcher = createSearcher(1);
+    	
+    	// search by username
+    	TopDocs foundDocs = searchByUsername("hazeleyes094", searcher);
+    	
+    	System.out.println("Searching for username: hazeleyes094");
+    	System.out.println("Total Results: " + foundDocs.totalHits);
+    	
+    	for(ScoreDoc sd : foundDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		System.out.println(String.format(d.get("username")));
+    		
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println("");
+    	}
+    	
+    	TopDocs foundDocs2 = searchByLocation("united77states", searcher);
+    	
+    	System.out.println("Searching for location: united states");
+    	System.out.println("Total Results: " + foundDocs2.totalHits);
+    	
+    	for(ScoreDoc sd : foundDocs2.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		System.out.println(String.format(d.get("username")));
+    		
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println("");
+    	}
+    	
+   	TopDocs foundDocs3 = searchByText("we77shall!!", searcher);
+    	
+    	System.out.println("Searching for text: we shall!!");
+    	System.out.println("Total Results: " + foundDocs3.totalHits);
+    	
+    	for(ScoreDoc sd : foundDocs3.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		System.out.println(String.format(d.get("username")));
+    		
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println("");
+    	}
+    	
+   	TopDocs foundDocs4 = searchByFavCount("891", searcher);
+    	
+    	System.out.println("Searching for favorites count: 891");
+    	System.out.println("Total Results: " + foundDocs4.totalHits);
+    	
+    	for(ScoreDoc sd : foundDocs4.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		System.out.println(String.format(d.get("username")));
+    		
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println("");
+    	}
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // CREATE INDEX
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static void createIndexes() throws Exception {
+
     	List<Document> docs = new ArrayList<>();
     	
     	// traverse through all 12 files from convertedtweets directory
     	for(int index = 1; index <= 12; index++) {
     		IndexWriter indexWriter = createWriter(index);
-    		arrayObject = parseJSON(index);
+    		JSONArray arrayObject = parseJSON(index);
 
     		docs = createDocument(arrayObject);
     		
@@ -53,22 +154,6 @@ public class LuceneWriteIndex {
     		indexWriter.commit();
     		indexWriter.close();
     	}
-    	
-    	
-        /*IndexWriter writer = createWriter();
-        List<Document> documents = new ArrayList<>();
-         
-        Document document1 = createDocument(1, "Lokesh", "Gupta", "howtodoinjava.com");
-        documents.add(document1);
-         
-        Document document2 = createDocument(2, "Brian", "Schultz", "example.com");
-        documents.add(document2);
-         
-        writer.deleteAll();
-         
-        writer.addDocuments(documents);
-        writer.commit();
-        writer.close();*/
     }
     
     
@@ -159,36 +244,105 @@ public class LuceneWriteIndex {
         		location = userobj.get("location").toString();
         	}
         	
-        	//title = obj.get("titles").toString();
+        	// replace spaces with 77
+        	// get rid of special characters
+        	username = username.toLowerCase();
+        	location = location.toLowerCase();
+        	location = location.replace(" ", "77");
+        	text = text.toLowerCase();
+        	text = text.replace(" ", "77");
+        	text = text.replaceAll("[^a-zA-Z0-9]", "");
 
         	System.out.println("username: " + username);
         	System.out.println("location: " + location);
         	System.out.println("text: " + text);
         	System.out.println("favorites count: " + favoritesCount);
-        	//System.out.println("title: " + title);
         	System.out.println("");
         	
+        	
+        	// add data into the documents
+        	// add document into the list
         	doc.add(new StringField("username", username, Field.Store.YES));
         	doc.add(new StringField("location", location, Field.Store.YES));
         	doc.add(new StringField("text", text, Field.Store.YES));
         	doc.add(new StringField("favoritesCount", favoritesCount, Field.Store.YES));
-        	//doc.add(new StringField("title", title, Field.Store.YES));
         	
         	docs.add(doc);
         }
  
         return docs;
     }
- 
-  
     
-    // write the document to the index and then close it
-    /*public void finish() {
-    	try {
-    		indexWriter.commit();
-    		indexWriter.close();
-    	} catch(IOException ex) {
-    		System.err.println("Error:" + ex.getMessage());
-    	}
-    }*/
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // SEARCH INDEX
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    
+    // filePath is the target index file to be searched
+    // create index searcher to search lucene documents from indexes
+    private static IndexSearcher createSearcher(int fileNum) throws IOException{
+    	String filePath = INDEX_DIR + "\\t-" + Integer.toString(fileNum) + ".index";
+    	
+    	Directory dir = FSDirectory.open(Paths.get(filePath));
+    	IndexReader reader = DirectoryReader.open(dir);
+    	IndexSearcher searcher = new IndexSearcher(reader);
+    	return searcher;
+    }
+    
+    private static TopDocs searchByUsername(String username, IndexSearcher searcher) throws IOException{
+    	QueryParser qp = new QueryParser("username", new StandardAnalyzer());
+    	Query usernameQuery = null;
+		try {
+			usernameQuery = qp.parse(username);
+		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			System.out.println("Error: " + e.getMessage());			
+		}
+    	
+		TopDocs hits = searcher.search(usernameQuery, 10);
+		
+		return hits;
+    }
+    
+    private static TopDocs searchByLocation(String location, IndexSearcher searcher) throws IOException{
+    	QueryParser qp = new QueryParser("location", new StandardAnalyzer());
+    	Query locationQuery = null;
+		try {
+			locationQuery = qp.parse(location);
+		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			System.out.println("Error: " + e.getMessage());			
+		}
+    	
+		TopDocs hits = searcher.search(locationQuery, 10);
+		
+		return hits;
+    }
+    
+    private static TopDocs searchByText(String text, IndexSearcher searcher) throws IOException{
+    	text = text.replaceAll("[^a-zA-Z0-9]", "");
+    	QueryParser qp = new QueryParser("text", new StandardAnalyzer());
+    	Query locationQuery = null;
+		try {
+			locationQuery = qp.parse(text);
+		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			System.out.println("Error: " + e.getMessage());			
+		}
+    	
+		TopDocs hits = searcher.search(locationQuery, 10);
+		
+		return hits;
+    }
+    
+    private static TopDocs searchByFavCount(String favoritesCount, IndexSearcher searcher) throws IOException{
+    	QueryParser qp = new QueryParser("favoritesCount", new StandardAnalyzer());
+    	Query favCountQuery = null;
+		try {
+			favCountQuery = qp.parse(favoritesCount);
+		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			System.out.println("Error: " + e.getMessage());			
+		}
+    	
+		TopDocs hits = searcher.search(favCountQuery, 10);
+		
+		return hits;
+    }
 }
