@@ -10,9 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -32,6 +34,7 @@ import org.apache.lucene.util.packed.PackedLongValues.Iterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.TopDocs;
 
@@ -263,6 +266,58 @@ public class LuceneWriteIndex {
     	out.close();
     }
 
+    public static void testSearches2() throws Exception{
+    	
+    	IndexSearcher searcher = createSearcher(1);
+    	
+    	// search by username
+    	TopDocs foundDocs = searchByUsername("hazeleyes094", searcher);
+    	
+    	
+    	System.out.println("Searching for username: hazeleyes094");
+    	System.out.println("Total Results: " + foundDocs.totalHits);
+    	
+    	int index = 0;
+    	PrintWriter out = null;
+    	
+    	for(ScoreDoc sd : foundDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		
+    		System.out.println(String.format(username));
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		
+    		System.out.println(json.toJSONString());
+    		System.out.println("");
+    		
+    		String jsonString = json.toString();
+    		
+
+    		try {
+    			out = new PrintWriter(new FileWriter("C:\\lucene\\searchResults\\userSearchResults.json"));
+    			out.write(jsonString);
+    			
+    		}catch (Exception ex) {
+    			System.out.println("error: " + ex.toString());
+    		}
+    	
+    	}
+    	out.close();
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CREATE INDEX
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -473,5 +528,33 @@ public class LuceneWriteIndex {
 		TopDocs hits = searcher.search(favCountQuery, 10);
 		
 		return hits;
+    }
+    
+    private static TopDocs search(String queryterm, IndexSearcher searcher) throws IOException {
+    	String fields[] = {"username", "location", "text", "favoritesCount"};
+		HashMap<String, Float> boosts = new HashMap<String, Float>();
+		boosts.put("username", (float) 1.5);
+		boosts.put("location", (float) 2.5);
+		boosts.put("text", (float) 2.0);
+		boosts.put("favoritescount", (float) 3.0);
+		  
+		MultiFieldQueryParser mfQueryParser = new MultiFieldQueryParser(fields,new StandardAnalyzer(),boosts);
+    	Query qt = null;
+		try {
+			StringTokenizer strtok = new StringTokenizer(queryterm, " ~`!$%^&*()-+={[}]|:;'<>,./?\"\'\\/\n\t\b\f\r");
+			String querytoparse = "";
+			while(strtok.hasMoreElements()) {
+				String token = strtok.nextToken();
+				querytoparse += token;
+			}
+			
+			qt = mfQueryParser.parse(querytoparse);
+    	} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			System.out.println("Error: " + e.getMessage());			
+		}
+    	
+		TopDocs hits = searcher.search(qt, 10);
+		return hits;
+    	
     }
 }
