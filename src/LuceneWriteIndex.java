@@ -59,7 +59,10 @@ public class LuceneWriteIndex {
     	//createIndexes();
     	
     	// testing for searches
-    	testSearches();
+    	//testSearches();
+    	
+    	//IndexSearcher searcher = createSearcher(1);
+    	searchMultiFields("united states");
     }
     
     public static void testSearches() throws Exception{
@@ -81,11 +84,15 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
     		
     		System.out.println(String.format(username));
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
     		System.out.println("");
     		
     		// prepare to put into json format
@@ -94,6 +101,8 @@ public class LuceneWriteIndex {
     		json.put("location", location);
     		json.put("text", text);
     		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
     		
     		System.out.println(json.toJSONString());
     		System.out.println("");
@@ -127,10 +136,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
     		System.out.println("");
     		
     		// prepare to put into json format
@@ -139,6 +152,9 @@ public class LuceneWriteIndex {
     		json.put("location", location);
     		json.put("text", text);
     		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
     		
     		System.out.println(json.toJSONString());
     		System.out.println("");
@@ -178,10 +194,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
     		System.out.println("");
     		
     		// prepare to put into json format
@@ -190,6 +210,8 @@ public class LuceneWriteIndex {
     		json.put("location", location);
     		json.put("text", text);
     		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
     		
     		System.out.println(json.toJSONString());
     		System.out.println("");
@@ -229,10 +251,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
     		System.out.println("");
     		
     		// prepare to put into json format
@@ -241,6 +267,8 @@ public class LuceneWriteIndex {
     		json.put("location", location);
     		json.put("text", text);
     		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
     		
     		System.out.println(json.toJSONString());
     		System.out.println("");
@@ -266,6 +294,8 @@ public class LuceneWriteIndex {
     	out.close();
     }
 
+    
+    // testing for kiets search function
     public static void testSearches2() throws Exception{
     	
     	IndexSearcher searcher = createSearcher(1);
@@ -318,6 +348,167 @@ public class LuceneWriteIndex {
     	}
     	out.close();
     }
+    
+    
+    public static void searchMultiFields(String queryTerm) throws Exception{
+    	
+    	IndexSearcher searcher = createSearcher(1);
+    	
+    	System.out.println("Searching for query: " + queryTerm);
+    	// process the query term to fit our searches
+    	queryTerm = queryTerm.toLowerCase();
+    	
+    	if(queryTerm.contains(" ")) {
+    		queryTerm = queryTerm.replace(" ", "77");
+    	}
+
+    	
+    	// do the searching
+    	TopDocs usernameDocs = searchByUsername(queryTerm, searcher);
+    	TopDocs locationDocs = searchByLocation(queryTerm, searcher);
+    	TopDocs textDocs = searchByText(queryTerm, searcher);
+    	TopDocs favCountDocs = searchByFavCount(queryTerm, searcher);
+    	
+    	System.out.println("username search total hits: " + usernameDocs.totalHits);
+    	System.out.println("location search total hits: " + locationDocs.totalHits);
+    	System.out.println("textDocs search total hits: " + textDocs.totalHits);
+    	System.out.println("favCountDocs search total hits: " + favCountDocs.totalHits);
+    	System.out.println("");
+    	
+    	for(ScoreDoc sd : usernameDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
+    		
+    		System.out.println(String.format(username));
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
+    		String jsonString = json.toString();
+    		
+    		System.out.println(jsonString);
+    		System.out.println("");
+    	}
+    	
+    	for(ScoreDoc sd : locationDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
+    		
+    		System.out.println(String.format(username));
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
+    		String jsonString = json.toString();
+    		
+    		System.out.println(jsonString);
+    		System.out.println("");
+    	}
+    	
+    	for(ScoreDoc sd : textDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
+    		
+    		System.out.println(String.format(username));
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
+    		String jsonString = json.toString();
+    		
+    		System.out.println(jsonString);
+    		System.out.println("");
+    	}
+    	
+    	for(ScoreDoc sd : favCountDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title");
+    		String time = d.get("created_at");
+    		
+    		System.out.println(String.format(username));
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println(String.format(title));
+    		System.out.println(String.format(time));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
+    		String jsonString = json.toString();
+    		
+    		System.out.println(jsonString);
+    		System.out.println("");
+    	}
+    		
+    }
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CREATE INDEX
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -390,6 +581,8 @@ public class LuceneWriteIndex {
         String location;
         String text;
         String favoritesCount;
+        String title;
+        String time;
         
         for(JSONObject obj : (List<JSONObject>) jsonArray) {
         	Document doc = new Document();
@@ -410,7 +603,7 @@ public class LuceneWriteIndex {
 
         	//System.out.println(newobj.get("text"));
         	//System.out.println(newobj.get("user"));
-        	//title = obj.get("titles").toString();
+        	//System.out.println(tweetobj.get("created_at"));
         	
         	String content2 = tweetobj.get("user").toString();
         	//System.out.println(content2);
@@ -421,6 +614,10 @@ public class LuceneWriteIndex {
         	text = tweetobj.get("text").toString();
         	username = userobj.get("screen_name").toString();
         	favoritesCount = userobj.get("favourites_count").toString();
+        	title = obj.get("titles").toString();
+        	time = tweetobj.get("created_at").toString();
+        	
+        	
         	if(userobj.get("location") == null) {
         		location = "null";
         	}
@@ -436,11 +633,15 @@ public class LuceneWriteIndex {
         	text = text.toLowerCase();
         	text = text.replace(" ", "77");
         	text = text.replaceAll("[^a-zA-Z0-9]", "");
+        	title = title.replace("[", "");
+        	title = title.replace("]", "");
 
         	System.out.println("username: " + username);
         	System.out.println("location: " + location);
         	System.out.println("text: " + text);
         	System.out.println("favorites count: " + favoritesCount);
+        	System.out.println("title: " + title);
+        	System.out.println("created at: " + time);
         	System.out.println("");
         	
         	
@@ -450,6 +651,8 @@ public class LuceneWriteIndex {
         	doc.add(new StringField("location", location, Field.Store.YES));
         	doc.add(new StringField("text", text, Field.Store.YES));
         	doc.add(new StringField("favoritesCount", favoritesCount, Field.Store.YES));
+        	doc.add(new TextField("title", title, Field.Store.YES));
+        	doc.add(new StringField("created_at", time, Field.Store.YES));
         	
         	docs.add(doc);
         }
