@@ -127,7 +127,7 @@ public class LuceneWriteIndex {
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
-    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println(String.format(favoritesCount));
     		System.out.println("");
     		
     		// prepare to put into json format
@@ -178,7 +178,7 @@ public class LuceneWriteIndex {
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
-    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println(String.format(favoritesCount));
     		System.out.println("");
     		
     		// prepare to put into json format
@@ -229,7 +229,7 @@ public class LuceneWriteIndex {
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
-    		System.out.println(String.format(d.get("favoritesCount")));
+    		System.out.println(String.format(favoritesCount));
     		System.out.println("");
     		
     		// prepare to put into json format
