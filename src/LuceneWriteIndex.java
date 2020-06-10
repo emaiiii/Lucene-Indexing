@@ -27,6 +27,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.packed.PackedLongValues.Iterator;
@@ -37,7 +38,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.TopDocs;
-
+import org.apache.lucene.search.WildcardQuery;
 import org.json.simple.JSONArray; 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -62,16 +63,17 @@ public class LuceneWriteIndex {
     	//testSearches();
     	
     	//IndexSearcher searcher = createSearcher(1);
-    	searchMultiFields("united states");
+    	//searchMultiFields("united states");
+    	searchMultiFields("on");
     }
     
     public static void testSearches() throws Exception{
     	IndexSearcher searcher = createSearcher(1);
     	
     	// search by username
-    	TopDocs foundDocs = searchByUsername("hazeleyes094", searcher);
+    	TopDocs foundDocs = searchByUsername("eyes", searcher);
     	
-    	System.out.println("Searching for username: hazeleyes094");
+    	System.out.println("Searching for username: eyes");
     	System.out.println("Total Results: " + foundDocs.totalHits);
     	
     	int index = 0;
@@ -84,14 +86,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(username));
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -136,13 +138,13 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -194,13 +196,13 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -251,13 +253,71 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
+    		System.out.println(String.format(time));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
+    		System.out.println(json.toJSONString());
+    		System.out.println("");
+    			
+    		if(index != 0) {
+    			jsonString = jsonString + "," + json.toString();
+    			index++;
+    		}
+    		else {
+    			jsonString = json.toString();
+    			index++;
+    		}
+    		
+
+    		try {
+    			out = new PrintWriter(new FileWriter("C:\\lucene\\searchResults\\favCountSearchResults.json"));
+    			out.write(jsonString);
+    			
+    		}catch (Exception ex) {
+    			System.out.println("error: " + ex.toString());
+    		}
+    	}
+    	out.close();
+    	
+    	
+    	index = 0;
+    	
+    	TopDocs foundDocs5 = searchByTitle("united77states", searcher);
+    	
+    	System.out.println("Searching for title: united states");
+    	System.out.println("Total Results: " + foundDocs4.totalHits);
+    	
+    	for(ScoreDoc sd : foundDocs5.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		System.out.println(String.format(d.get("username")));
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title").replace("77", " ");
+    		String time = d.get("created_at");
+    		
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -293,62 +353,6 @@ public class LuceneWriteIndex {
     	}
     	out.close();
     }
-
-    
-    // testing for kiets search function
-    public static void testSearches2() throws Exception{
-    	
-    	IndexSearcher searcher = createSearcher(1);
-    	
-    	// search by username
-    	TopDocs foundDocs = searchByUsername("hazeleyes094", searcher);
-    	
-    	
-    	System.out.println("Searching for username: hazeleyes094");
-    	System.out.println("Total Results: " + foundDocs.totalHits);
-    	
-    	int index = 0;
-    	PrintWriter out = null;
-    	
-    	for(ScoreDoc sd : foundDocs.scoreDocs) {
-    		Document d = searcher.doc(sd.doc);
-    		
-    		String username = d.get("username");
-    		String location = d.get("location").replace("77", " ");
-    		String text = d.get("text").replace("77", " ");
-    		String favoritesCount = d.get("favoritesCount");
-    		
-    		System.out.println(String.format(username));
-    		System.out.println(String.format(location));
-    		System.out.println(String.format(text));
-    		System.out.println(String.format(favoritesCount));
-    		System.out.println("");
-    		
-    		// prepare to put into json format
-    		JSONObject json = new JSONObject();
-    		json.put("username", username);
-    		json.put("location", location);
-    		json.put("text", text);
-    		json.put("favoritesCount", favoritesCount);
-    		
-    		System.out.println(json.toJSONString());
-    		System.out.println("");
-    		
-    		String jsonString = json.toString();
-    		
-
-    		try {
-    			out = new PrintWriter(new FileWriter("C:\\lucene\\searchResults\\userSearchResults.json"));
-    			out.write(jsonString);
-    			
-    		}catch (Exception ex) {
-    			System.out.println("error: " + ex.toString());
-    		}
-    	
-    	}
-    	out.close();
-    }
-    
     
     public static void searchMultiFields(String queryTerm) throws Exception{
     	
@@ -368,13 +372,16 @@ public class LuceneWriteIndex {
     	TopDocs locationDocs = searchByLocation(queryTerm, searcher);
     	TopDocs textDocs = searchByText(queryTerm, searcher);
     	TopDocs favCountDocs = searchByFavCount(queryTerm, searcher);
+    	TopDocs titleDocs = searchByTitle(queryTerm, searcher);
     	
     	System.out.println("username search total hits: " + usernameDocs.totalHits);
     	System.out.println("location search total hits: " + locationDocs.totalHits);
     	System.out.println("textDocs search total hits: " + textDocs.totalHits);
     	System.out.println("favCountDocs search total hits: " + favCountDocs.totalHits);
+    	System.out.println("titleDocs search total hits: " + titleDocs.totalHits);
     	System.out.println("");
     	
+    	System.out.println("RESULTS FOR USERNAMES: \n");
     	for(ScoreDoc sd : usernameDocs.scoreDocs) {
     		Document d = searcher.doc(sd.doc);
     		
@@ -382,14 +389,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(username));
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -408,6 +415,7 @@ public class LuceneWriteIndex {
     		System.out.println("");
     	}
     	
+    	System.out.println("RESULTS FOR LOCATIONS: \n");
     	for(ScoreDoc sd : locationDocs.scoreDocs) {
     		Document d = searcher.doc(sd.doc);
     		
@@ -415,14 +423,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(username));
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -441,6 +449,7 @@ public class LuceneWriteIndex {
     		System.out.println("");
     	}
     	
+    	System.out.println("RESULTS FOR TEXTS: \n");
     	for(ScoreDoc sd : textDocs.scoreDocs) {
     		Document d = searcher.doc(sd.doc);
     		
@@ -448,14 +457,14 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(username));
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -474,6 +483,7 @@ public class LuceneWriteIndex {
     		System.out.println("");
     	}
     	
+    	System.out.println("RESULTS FOR FAV. COUNT: \n");
     	for(ScoreDoc sd : favCountDocs.scoreDocs) {
     		Document d = searcher.doc(sd.doc);
     		
@@ -481,14 +491,48 @@ public class LuceneWriteIndex {
     		String location = d.get("location").replace("77", " ");
     		String text = d.get("text").replace("77", " ");
     		String favoritesCount = d.get("favoritesCount");
-    		String title = d.get("title");
+    		String title = d.get("title").replace("77", " ");
     		String time = d.get("created_at");
     		
     		System.out.println(String.format(username));
     		System.out.println(String.format(location));
     		System.out.println(String.format(text));
     		System.out.println(String.format(favoritesCount));
-    		System.out.println(String.format(title));
+    		System.out.println(title);
+    		System.out.println(String.format(time));
+    		System.out.println("");
+    		
+    		// prepare to put into json format
+    		JSONObject json = new JSONObject();
+    		json.put("username", username);
+    		json.put("location", location);
+    		json.put("text", text);
+    		json.put("favoritesCount", favoritesCount);
+    		json.put("title", title);
+    		json.put("created_at", time);
+    		
+    		String jsonString = json.toString();
+    		
+    		System.out.println(jsonString);
+    		System.out.println("");
+    	}
+    	
+    	System.out.println("RESULTS FOR TITLE: \n");
+    	for(ScoreDoc sd : titleDocs.scoreDocs) {
+    		Document d = searcher.doc(sd.doc);
+    		
+    		String username = d.get("username");
+    		String location = d.get("location").replace("77", " ");
+    		String text = d.get("text").replace("77", " ");
+    		String favoritesCount = d.get("favoritesCount");
+    		String title = d.get("title").replace("77", " ");
+    		String time = d.get("created_at");
+    		
+    		System.out.println(String.format(username));
+    		System.out.println(String.format(location));
+    		System.out.println(String.format(text));
+    		System.out.println(String.format(favoritesCount));
+    		System.out.println(title);
     		System.out.println(String.format(time));
     		System.out.println("");
     		
@@ -635,6 +679,7 @@ public class LuceneWriteIndex {
         	text = text.replaceAll("[^a-zA-Z0-9]", "");
         	title = title.replace("[", "");
         	title = title.replace("]", "");
+        	title = title.replace(" ", "77");
 
         	System.out.println("username: " + username);
         	System.out.println("location: " + location);
@@ -676,45 +721,46 @@ public class LuceneWriteIndex {
     	return searcher;
     }
     
+    
+    // all searches except favCount utilize WildcardQuery to see if the query term is a substring
+    // searchFavCount remains using Query/QueryParser, because we want the exact number of favorites Count
     private static TopDocs searchByUsername(String username, IndexSearcher searcher) throws IOException{
-    	QueryParser qp = new QueryParser("username", new StandardAnalyzer());
-    	Query usernameQuery = null;
+    	WildcardQuery usernameQuery = null;
 		try {
-			usernameQuery = qp.parse(username);
-		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			usernameQuery = new WildcardQuery(new Term("username", "*" + username + "*"));
+		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());			
 		}
     	
-		TopDocs hits = searcher.search(usernameQuery, 40);
+		TopDocs hits = searcher.search(usernameQuery, 10);
 		
 		return hits;
     }
     
     private static TopDocs searchByLocation(String location, IndexSearcher searcher) throws IOException{
-    	QueryParser qp = new QueryParser("location", new StandardAnalyzer());
-    	Query locationQuery = null;
+    	WildcardQuery locationQuery = null;
 		try {
-			locationQuery = qp.parse(location);
-		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			locationQuery = new WildcardQuery(new Term("location", "*" + location + "*"));
+		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());			
 		}
     	
-		TopDocs hits = searcher.search(locationQuery, 40);
+		TopDocs hits = searcher.search(locationQuery, 10);
 		
 		return hits;
     }
     
     private static TopDocs searchByText(String text, IndexSearcher searcher) throws IOException{
+    	// process the text to remove special characters
     	text = text.replaceAll("[^a-zA-Z0-9]", "");
-    	QueryParser qp = new QueryParser("text", new StandardAnalyzer());
-    	Query locationQuery = null;
+    	WildcardQuery textQuery = null;
 		try {
-			locationQuery = qp.parse(text);
-		} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			textQuery = new WildcardQuery(new Term("text", "*" + text + "*"));
+		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());			
 		}
     	
-		TopDocs hits = searcher.search(locationQuery, 10);
+		TopDocs hits = searcher.search(textQuery, 10);
 		
 		return hits;
     }
@@ -733,31 +779,16 @@ public class LuceneWriteIndex {
 		return hits;
     }
     
-    private static TopDocs search(String queryterm, IndexSearcher searcher) throws IOException {
-    	String fields[] = {"username", "location", "text", "favoritesCount"};
-		HashMap<String, Float> boosts = new HashMap<String, Float>();
-		boosts.put("username", (float) 1.5);
-		boosts.put("location", (float) 2.5);
-		boosts.put("text", (float) 2.0);
-		boosts.put("favoritescount", (float) 3.0);
-		  
-		MultiFieldQueryParser mfQueryParser = new MultiFieldQueryParser(fields,new StandardAnalyzer(),boosts);
-    	Query qt = null;
+    private static TopDocs searchByTitle(String title, IndexSearcher searcher) throws IOException{
+    	WildcardQuery titleQuery = null;
 		try {
-			StringTokenizer strtok = new StringTokenizer(queryterm, " ~`!$%^&*()-+={[}]|:;'<>,./?\"\'\\/\n\t\b\f\r");
-			String querytoparse = "";
-			while(strtok.hasMoreElements()) {
-				String token = strtok.nextToken();
-				querytoparse += token;
-			}
-			
-			qt = mfQueryParser.parse(querytoparse);
-    	} catch (org.apache.lucene.queryparser.classic.ParseException e) {
+			titleQuery = new WildcardQuery(new Term("title", "*" + title + "*"));
+		} catch (Exception e) {
 			System.out.println("Error: " + e.getMessage());			
 		}
     	
-		TopDocs hits = searcher.search(qt, 10);
+		TopDocs hits = searcher.search(titleQuery, 10);
+		
 		return hits;
-    	
     }
 }
